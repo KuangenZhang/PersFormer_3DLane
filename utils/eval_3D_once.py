@@ -40,8 +40,8 @@ class Bev_Projector:
         lane_x = one_lane[:, 0]
         lane_z = one_lane[:, 2]
 
-        x_img = (lane_x / self.res).astype(np.int32)
-        y_img = (-lane_z / self.res).astype(np.int32)
+        x_img = (lane_x / self.res).astype(int32)
+        y_img = (-lane_z / self.res).astype(int32)
 
         x_img += int(self.side_range[1] / self.res)
         y_img += int(self.fwd_range[1] / self.res)
@@ -228,7 +228,7 @@ class LaneEvalOneFile:
         gt_num = len(gt_lanes3d)
         pred_lanes3d = pred_json['lanes']
         pred_lanes3d = [pred_lanespec3d["points"] for pred_lanespec3d in pred_lanes3d if len(pred_lanespec3d) >= 2
-                        and np.float(pred_lanespec3d["score"]) > store_spec]
+                        and float(pred_lanespec3d["score"]) > store_spec]
         # pred_lanes3d = [pred_lanespec3d for pred_lanespec3d in pred_lanes3d if len(pred_lanespec3d) >= 2]
         pred_num = len(pred_lanes3d)
         return gt_lanes3d, gt_num, pred_lanes3d, pred_num

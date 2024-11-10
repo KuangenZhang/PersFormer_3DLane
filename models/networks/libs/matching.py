@@ -60,8 +60,8 @@ def match_proposals_with_targets(model, proposals, targets, t_pos=25., t_neg=30.
     # print("Brute force: ", last_vis_idx)
     target_vis = targets[:, model.num_category + 2 + model.n_offsets:]
     x_s, y_s = torch.nonzero(target_vis == 1, as_tuple=True)
-    new_last_vis_idx = np.zeros(last_vis_idx.shape, dtype=np.int)
-    new_last_vis_idx[x_s.cpu().numpy()] = y_s.cpu().numpy().astype(np.int)
+    new_last_vis_idx = np.zeros(last_vis_idx.shape, dtype=int)
+    new_last_vis_idx[x_s.cpu().numpy()] = y_s.cpu().numpy().astype(int)
     ends = torch.from_numpy(new_last_vis_idx).to(targets.device)
     # print("Fast: ", new_last_vis_idx)
     

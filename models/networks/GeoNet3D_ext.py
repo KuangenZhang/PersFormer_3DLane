@@ -102,8 +102,8 @@ def unit_update_projection_for_data_aug(args, aug_mats, _M_inv, _S_im_inv=None, 
         aug_mats = aug_mats.cuda()
 
     if _S_im_inv is None:
-        _S_im_inv = torch.from_numpy(np.array([[1/np.float(args.resize_w),                         0, 0],
-                                                    [                        0, 1/np.float(args.resize_h), 0],
+        _S_im_inv = torch.from_numpy(np.array([[1/float(args.resize_w),                         0, 0],
+                                                    [                        0, 1/float(args.resize_h), 0],
                                                     [                        0,                         0, 1]], dtype=np.float32)).cuda()
     
     if _S_im is None:
@@ -272,8 +272,8 @@ class Net(nn.Module):
         self.S_im = torch.from_numpy(np.array([[args.resize_w,              0, 0],
                                                [            0,  args.resize_h, 0],
                                                [            0,              0, 1]], dtype=np.float32))
-        self.S_im_inv = torch.from_numpy(np.array([[1/np.float(args.resize_w),                         0, 0],
-                                                   [                        0, 1/np.float(args.resize_h), 0],
+        self.S_im_inv = torch.from_numpy(np.array([[1/float(args.resize_w),                         0, 0],
+                                                   [                        0, 1/float(args.resize_h), 0],
                                                    [                        0,                         0, 1]], dtype=np.float32))
 
         # # image transform matrix
@@ -287,7 +287,7 @@ class Net(nn.Module):
 
             # Define network
             # the grid considers both src and dst grid normalized
-            size_top = torch.Size([np.int(args.ipm_h), np.int(args.ipm_w)])
+            size_top = torch.Size([int(args.ipm_h), int(args.ipm_w)])
             self.project_layer = ProjectiveGridGenerator(size_top, args.no_cuda)
 
             # Conv layers to convert original resolution binary map to target resolution with high-dimension

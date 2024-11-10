@@ -155,8 +155,8 @@ class PersFormer(nn.Module):
         S_im = torch.from_numpy(np.array([[args.resize_w,              0, 0],
                                           [            0,  args.resize_h, 0],
                                           [            0,              0, 1]], dtype=np.float32))
-        S_im_inv = torch.from_numpy(np.array([[1/np.float(args.resize_w),                         0, 0],
-                                              [                        0, 1/np.float(args.resize_h), 0],
+        S_im_inv = torch.from_numpy(np.array([[1/float(args.resize_w),                         0, 0],
+                                              [                        0, 1/float(args.resize_h), 0],
                                               [                        0,                         0, 1]], dtype=np.float32))
         S_im_inv_batch = S_im_inv.unsqueeze_(0).expand([self.batch_size, 3, 3]).type(torch.FloatTensor)
 

@@ -136,8 +136,8 @@ class Runner:
                     args.mod, sum(tensor.numel() for tensor in model2.parameters())/1e6))
 
         # image matrix
-        _S_im_inv = torch.from_numpy(np.array([[1/np.float(args.resize_w),                         0, 0],
-                                                    [                        0, 1/np.float(args.resize_h), 0],
+        _S_im_inv = torch.from_numpy(np.array([[1/float(args.resize_w),                         0, 0],
+                                                    [                        0, 1/float(args.resize_h), 0],
                                                     [                        0,                         0, 1]], dtype=np.float32)).cuda()
         _S_im = torch.from_numpy(np.array([[args.resize_w,              0, 0],
                                                 [            0,  args.resize_h, 0],

@@ -20,15 +20,11 @@ import os.path as ops
 
 def config(args):
     args.model_name = 'PersFormer'
-    # 300 sequence
-    # args.dataset_name = 'openlane'
-    # args.dataset_dir = '/mnt/disk01/openlane/images/'
-    # args.data_dir = '/mnt/disk01/openlane/lane3d_300/'
 
-    # 1000 sequence
+    # 2 sequence
     args.dataset_name = 'openlane'
-    args.dataset_dir = '/mnt/disk01/openlane/images/'
-    args.data_dir = '/mnt/disk01/openlane/lane3d_1000/'
+    args.dataset_dir = '/home/kuangen/Projects/Datasets/OpenLaneV1/samples/images/'
+    args.data_dir = '/home/kuangen/Projects/Datasets/OpenLaneV1/samples/lane3d_300/'
 
     if 'openlane' in args.dataset_name:
         openlane_config(args)

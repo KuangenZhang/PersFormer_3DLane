@@ -5,12 +5,16 @@ Other config details please see `utils/utils.py`.
 ## Training
 - For **training**: set `args.evaluate = False` , and specify your setup in `$ $` ,  
 then choose one way to run:  
-```
+```bash
 # using torch.distributed.launch to init
 python -m torch.distributed.launch --nproc_per_node $NUM_GPUS$ main_persformer.py --mod=$EXPR_NAME$ --batch_size=$BATCH_SIZE$ --nepochs=$NUM_EPOCHS$
 
 # or using slurm to init
 srun -p $PARTITION$ --job-name=PersFormer --mpi=pmi2 -n $NUM_GPUS$ --gres=gpu:$NUM_GPUS$ --ntasks-per-node=$NUM_GPUS$ python main_persformer.py --mod=$EXPR_NAME$ --batch_size=$BATCH_SIZE$ --nepochs=$NUM_EPOCHS$
+```
+
+```bash
+python -m torch.distributed.launch --nproc_per_node 1 main_persformer.py --mod=openlane_sample --batch_size=2 --nepochs=50
 ```
 
 ## Evaluation

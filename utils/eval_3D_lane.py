@@ -652,17 +652,17 @@ class LaneEval(object):
             pred_visibility_mat[i, :] = np.logical_and(pred_visibility_mat[i, :], visibility_vec)
             # pred_visibility_mat[i, :] = np.logical_and(x_values >= self.x_min, x_values <= self.x_max)
 
-        adj_mat = np.zeros((cnt_gt, cnt_pred), dtype=np.int)
-        cost_mat = np.zeros((cnt_gt, cnt_pred), dtype=np.int)
+        adj_mat = np.zeros((cnt_gt, cnt_pred), dtype=int)
+        cost_mat = np.zeros((cnt_gt, cnt_pred), dtype=int)
         cost_mat.fill(1000)
-        num_match_mat = np.zeros((cnt_gt, cnt_pred), dtype=np.float)
-        x_dist_mat_close = np.zeros((cnt_gt, cnt_pred), dtype=np.float)
+        num_match_mat = np.zeros((cnt_gt, cnt_pred), dtype=float)
+        x_dist_mat_close = np.zeros((cnt_gt, cnt_pred), dtype=float)
         x_dist_mat_close.fill(1000.)
-        x_dist_mat_far = np.zeros((cnt_gt, cnt_pred), dtype=np.float)
+        x_dist_mat_far = np.zeros((cnt_gt, cnt_pred), dtype=float)
         x_dist_mat_far.fill(1000.)
-        z_dist_mat_close = np.zeros((cnt_gt, cnt_pred), dtype=np.float)
+        z_dist_mat_close = np.zeros((cnt_gt, cnt_pred), dtype=float)
         z_dist_mat_close.fill(1000.)
-        z_dist_mat_far = np.zeros((cnt_gt, cnt_pred), dtype=np.float)
+        z_dist_mat_far = np.zeros((cnt_gt, cnt_pred), dtype=float)
         z_dist_mat_far.fill(1000.)
         # compute curve to curve distance
         for i in range(cnt_gt):
@@ -680,7 +680,7 @@ class LaneEval(object):
                 adj_mat[i, j] = 1
                 # ATTENTION: use the sum as int type to meet the requirements of min cost flow optimization (int type)
                 # using num_match_mat as cost does not work?
-                cost_mat[i, j] = np.sum(euclidean_dist).astype(np.int)
+                cost_mat[i, j] = np.sum(euclidean_dist).astype(int)
                 # cost_mat[i, j] = num_match_mat[i, j]
 
                 # use the both visible portion to calculate distance error

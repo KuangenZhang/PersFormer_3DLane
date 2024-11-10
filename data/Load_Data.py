@@ -131,10 +131,10 @@ class LaneDataset(Dataset):
             x_max = self.top_view_region[1, 0]
             self.x_min = x_min
             self.x_max = x_max
-            self.anchor_x_steps = np.linspace(x_min, x_max, np.int(args.ipm_w/8), endpoint=True)
+            self.anchor_x_steps = np.linspace(x_min, x_max, int(args.ipm_w/8), endpoint=True)
             self.anchor_y_steps = args.anchor_y_steps
             self.num_y_steps = len(self.anchor_y_steps)
-            self.anchor_num = np.int32(self.ipm_w / 8)
+            self.anchor_num = int32(self.ipm_w / 8)
 
             args.fmap_mapping_interp_index = None
             args.fmap_mapping_interp_weight = None
@@ -948,9 +948,9 @@ class LaneDataset(Dataset):
                 gt_laneline_visibility_all.append(gt_lane_visibility)
                 if 'category' in info_dict:
                     gt_laneline_category = info_dict['category']
-                    gt_laneline_category_all.append(np.array(gt_laneline_category, dtype=np.int32))
+                    gt_laneline_category_all.append(np.array(gt_laneline_category, dtype=int32))
                 else:
-                    gt_laneline_category_all.append(np.ones(len(gt_lane_pts), dtype=np.int32))
+                    gt_laneline_category_all.append(np.ones(len(gt_lane_pts), dtype=int32))
 
                 if not self.no_centerline:
                     gt_lane_pts = info_dict['centerLines']
@@ -1361,7 +1361,7 @@ class LaneDataset(Dataset):
                     #     gt_lane_visibility[i] = np.zeros_like(gt_lane_visibility[i])
                 gt_laneline_pts_all.append(gt_lane_pts)
                 gt_laneline_visibility_all.append(gt_lane_visibility)
-                gt_laneline_category_all.append(np.array(gt_laneline_category, dtype=np.int32))
+                gt_laneline_category_all.append(np.array(gt_laneline_category, dtype=int32))
 
         # save img index to name
         idx_path = {}
@@ -1817,7 +1817,7 @@ class LaneDataset(Dataset):
                     #     gt_lane_visibility[i] = np.zeros_like(gt_lane_visibility[i])
                 gt_laneline_pts_all.append(gt_lane_pts)
                 gt_laneline_visibility_all.append(gt_lane_visibility)
-                gt_laneline_category_all.append(np.array(gt_laneline_category, dtype=np.int32))
+                gt_laneline_category_all.append(np.array(gt_laneline_category, dtype=int32))
 
         # save img index to name
         idx_path = {}
@@ -2435,10 +2435,10 @@ class LaneDataset(Dataset):
                 x_ipm, y_ipm = homographic_transformation(self.H_g2ipm, x_g, self.anchor_y_steps)
                 if not self.use_default_anchor:
                     anchor_x_ipm, _ = homographic_transformation(self.H_g2ipm, self.anchor_grid_x[j], self.anchor_y_steps)
-                x_ipm = x_ipm.astype(np.int)
-                y_ipm = y_ipm.astype(np.int)
+                x_ipm = x_ipm.astype(int)
+                y_ipm = y_ipm.astype(int)
                 if not self.use_default_anchor:
-                    anchor_x_ipm = anchor_x_ipm.astype(np.int)
+                    anchor_x_ipm = anchor_x_ipm.astype(int)
                 for k in range(1, x_g.shape[0]):
                     im_ipm = cv2.line(im_ipm, (x_ipm[k - 1], y_ipm[k - 1]),
                                     (x_ipm[k], y_ipm[k]), color, width)
@@ -2582,7 +2582,7 @@ def compute_2d_lanes(pred_anchor, h_samples, H_g2im, anchor_x_steps, anchor_y_st
             # resample at h_samples
             x_values, z_values = resample_laneline_in_y(np.vstack([x_2d, y_2d]).T, h_samples)
             # assign out-of-range x values to be -2
-            x_values = x_values.astype(np.int)
+            x_values = x_values.astype(int)
             x_values[np.where(np.logical_or(x_values < x_min, x_values >= x_max))] = -2
             # assign far side y values to be -2
             x_values[np.where(h_samples < y_2d[0])] = -2

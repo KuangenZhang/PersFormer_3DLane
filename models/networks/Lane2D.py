@@ -296,8 +296,8 @@ class LaneATTHead(nn.Module):
                 proposal_vis = proposals[:, self.num_category+2+self.n_offsets:]
                 x_s, y_s = torch.nonzero(proposal_vis >= vis_threshold, as_tuple=True)
                 # last_vis_idx[x_s] = y_s
-                new_last_vis_idx = np.zeros(proposals.shape[0], dtype=np.int)
-                new_last_vis_idx[x_s.cpu().numpy()] = y_s.cpu().numpy().astype(np.int)
+                new_last_vis_idx = np.zeros(proposals.shape[0], dtype=int)
+                new_last_vis_idx[x_s.cpu().numpy()] = y_s.cpu().numpy().astype(int)
                 ends = torch.from_numpy(new_last_vis_idx).to(proposals.device)
 
                 # change anchor dim back to fit in the nms pkg
