@@ -14,7 +14,7 @@ srun -p $PARTITION$ --job-name=PersFormer --mpi=pmi2 -n $NUM_GPUS$ --gres=gpu:$N
 ```
 
 ```bash
-python -m torch.distributed.launch --nproc_per_node 1 main_persformer.py --mod=openlane_sample --batch_size=2 --nepochs=50
+python -m torch.distributed.launch --nproc_per_node 1 main_persformer.py --mod=openlane_sample --batch_size=4 --nepochs=50
 ```
 
 ## Evaluation
@@ -27,6 +27,12 @@ python -m torch.distributed.launch --nproc_per_node $NUM_GPUS$ main_persformer.p
 # or using slurm to init
 srun -p $PARTITION$ --job-name=PersFormer --mpi=pmi2 -n $NUM_GPUS$ --gres=gpu:$NUM_GPUS$ --ntasks-per-node=$NUM_GPUS$ python main_persformer.py --mod=$EXPR_NAME$ --batch_size=$BATCH_SIZE$
 ``` 
+
+```bash
+ --nepochs=50
+```
+
+
 - You could setup an experiment folder in the following hierarchy.
 ```
 ├── config/...
@@ -37,7 +43,7 @@ srun -p $PARTITION$ --job-name=PersFormer --mpi=pmi2 -n $NUM_GPUS$ --gres=gpu:$N
 |       └── PersFormer
 |           └── model_best_epoch.pth.tar
 ├── experiments/...
-├── imgs/...
+├── imgs/...python -m torch.distributed.launch --nproc_per_node 1 main_persformer.py --mod=openlane_sample --batch_size=4
 ├── models/...
 ├── utils/...
 └── main_persformer.py
