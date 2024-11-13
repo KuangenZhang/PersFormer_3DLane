@@ -644,6 +644,8 @@ class Visualizer:
             assert(idx.shape[0] == len(laneatt_pred))
         if laneatt_pos_anchor is not None:
             assert(idx.shape[0] == len(laneatt_pos_anchor))
+        
+        print("idx.shape: ", idx.shape)
 
         for i in range(idx.shape[0]):
             # during training, only visualize the first sample of this batch

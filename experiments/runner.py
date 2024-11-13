@@ -39,7 +39,7 @@ from utils.utils import *
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from .ddp import *
-
+from visualize.visualize_2d import images_to_video
 
 class Runner:
     def __init__(self, args):
@@ -523,7 +523,6 @@ class Runner:
                                                 laneatt_gt=gt_decoded_2d, laneatt_pred=pred_decoded_2d, laneatt_pos_anchor=anchors_positives,
                                                 intrinsics=gt_intrinsic, extrinsics=gt_extrinsic, seg_name=seg_name, img_name=img_name_all)
 
-                
                 # Write results
                 for j in range(num_el):
                     im_id = idx[j]
@@ -571,6 +570,9 @@ class Runner:
                         elif args.dataset_name == 'once':
                             self.save_eval_result_once(args, img_path, lanelines_pred, lanelines_prob)
 
+
+            if vis:
+                images_to_video(f"{vs_saver.save_path}/vis_2d")
 
             if 'openlane' in args.dataset_name:
                 eval_stats = self.evaluator.bench_one_submit_openlane_DDP(pred_lines_sub, gt_lines_sub, args.model_name, vis=False)

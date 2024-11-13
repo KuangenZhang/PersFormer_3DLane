@@ -29,7 +29,7 @@ srun -p $PARTITION$ --job-name=PersFormer --mpi=pmi2 -n $NUM_GPUS$ --gres=gpu:$N
 ``` 
 
 ```bash
- --nepochs=50
+python -m torch.distributed.launch --nproc_per_node 1 main_persformer.py --mod=openlane_sample --batch_size=4
 ```
 
 
