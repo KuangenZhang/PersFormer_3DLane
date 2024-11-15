@@ -84,6 +84,149 @@ class Runner:
         self.vs_saver = Visualizer(args)
         print("Init Done!")
 
+    def visualize(self, model):
+        args = self.args
+        loader = self.valid_loader
+        dataset = self.valid_dataset
+        vs_saver = self.vs_saver
+
+        if not args.no_cuda:
+            device = torch.device("cuda")
+        
+        pred_lines_sub = []
+        gt_lines_sub = []
+
+        # Evaluate model
+        model.eval()
+
+        # Start validation loop
+        with torch.no_grad():
+            (json_files, input, seg_maps, gt, gt_laneline_img, idx, gt_hcam, gt_pitch, gt_intrinsic, gt_extrinsic, seg_name, seg_bev_map) = next(iter(loader))
+                
+            if not args.no_cuda:
+                input, gt = input.cuda(non_blocking=True), gt.cuda(non_blocking=True)
+                seg_maps = seg_maps.cuda(non_blocking=True)
+                gt_hcam = gt_hcam.cuda()
+                gt_pitch = gt_pitch.cuda()
+                gt_intrinsic = gt_intrinsic.cuda()
+                gt_extrinsic = gt_extrinsic.cuda()
+                gt_laneline_img = gt_laneline_img.cuda()
+                seg_bev_map = seg_bev_map.cuda()
+            input = input.contiguous().float()
+
+            M_inv = unit_update_projection_extrinsic(args, gt_extrinsic, gt_intrinsic)
+
+            # Inference model
+            laneatt_proposals_list, output_net, pred_hcam, pred_pitch, pred_seg_bev_map, uncertainty_loss = model(input=input, _M_inv=M_inv)
+
+            # 3D loss
+            # Add laneatt loss
+            loss_att, loss_att_dict = model.laneatt_head.loss(laneatt_proposals_list, gt_laneline_img,
+                                                                        cls_loss_weight=args.cls_loss_weight,
+                                                                        reg_vis_loss_weight=args.reg_vis_loss_weight)
+            
+            pred_pitch = pred_pitch.data.cpu().numpy().flatten()
+            pred_hcam = pred_hcam.data.cpu().numpy().flatten()
+            gt_laneline_img = gt_laneline_img.data.cpu().numpy()
+            gt_intrinsic = gt_intrinsic.data.cpu().numpy()
+            gt_extrinsic = gt_extrinsic.data.cpu().numpy()
+            output_net = output_net.data.cpu().numpy()
+            gt = gt.data.cpu().numpy()
+
+            # unormalize lane outputs
+            num_el = input.size(0)
+            for j in range(num_el):
+                unormalize_lane_anchor(output_net[j], dataset)
+                unormalize_lane_anchor(gt[j], dataset)
+
+            # Apply nms on network BEV output
+            if not args.use_default_anchor:
+                output_net = nms_bev(output_net, args)
+
+            # Visualization
+            gt_2d = []
+            for j in range(num_el):
+                gt_2d.append(dataset.label_to_lanes(gt_laneline_img[j]))
+            gt_decoded_2d = []
+            for p in gt_2d:
+                lanes = []
+                for l in p:
+                    lanes.append(l.points)
+                gt_decoded_2d.append(lanes)
+            # Apply nms 
+            laneatt_proposals_list = model.laneatt_head.nms_new(laneatt_proposals_list,
+                                                                        args.nms_thres,
+                                                                        model.max_lanes,
+                                                                        args.conf_th,
+                                                                        args.vis_th)
+            prediction_2d = model.laneatt_head.decode(laneatt_proposals_list, args.vis_th, as_lanes=True)
+
+            pred_decoded_2d = []
+            pred_decoded_2d_cate = []
+            for p in prediction_2d:
+                lanes = []
+                cate = []
+                for l in p:
+                    lanes.append(l.points)
+                    cate.append(l.metadata['pred_cat'])
+                pred_decoded_2d.append(lanes)
+                pred_decoded_2d_cate.append(cate)
+
+            img_name_all = []
+            for j in range(num_el):
+                im_id = idx[j]
+                json_file = json_files[j]
+                
+                with open(json_file, 'r') as file:
+                    file_lines = [line for line in file]
+                    json_line = json.loads(file_lines[0])
+                img_path = json_line["file_path"]
+                img_name = os.path.basename(img_path)
+                img_name_all.append(img_name)
+
+
+            # For the purpose of vis positive anchors
+            anchors_positives = model.laneatt_head.anchors_to_lanes(loss_att_dict['anchors_positives'])
+            vs_saver.save_result_new(dataset, 'valid', 1, idx,
+                                    input, gt, output_net, pred_pitch, pred_hcam,
+                                    evaluate=args.evaluate,
+                                    laneatt_gt=gt_decoded_2d, laneatt_pred=pred_decoded_2d, laneatt_pos_anchor=anchors_positives,
+                                    intrinsics=gt_intrinsic, extrinsics=gt_extrinsic, seg_name=seg_name, img_name=img_name_all)
+
+            # Write results
+            for j in range(num_el):
+                im_id = idx[j]
+                # saving json style
+                json_file = json_files[j]
+
+                with open(json_file, 'r') as file:
+                    file_lines = [line for line in file]
+                    json_line = json.loads(file_lines[0])
+
+                gt_lines_sub.append(copy.deepcopy(json_line))
+                lane_anchors = output_net[j]
+
+                # convert to json output format
+                lanelines_pred, centerlines_pred, lanelines_prob, centerlines_prob = \
+                    compute_3d_lanes_all_category(lane_anchors, dataset, args.anchor_y_steps, gt_extrinsic[j][2,3], args.model_name)
+                
+                json_line["laneLines"] = lanelines_pred
+                json_line["laneLines_prob"] = lanelines_prob
+                pred_lines_sub.append(copy.deepcopy(json_line))
+
+                # save 2d/3d eval results
+                if args.evaluate and args.model_name == "PersFormer":
+                    img_path = json_line["file_path"]
+                    if args.dataset_name == 'openlane':
+                        self.save_eval_result(args, img_path, pred_decoded_2d[j], pred_decoded_2d_cate[j], lanelines_pred, lanelines_prob)
+                    elif args.dataset_name == 'once':
+                        self.save_eval_result_once(args, img_path, lanelines_pred, lanelines_prob)
+
+            
+            images_to_video(f"{vs_saver.save_path}/vis_2d")
+            images_to_video(f"{vs_saver.save_path}/vis_3d")
+        
+    
     def validate(self, model, model2=None, epoch=0, vis=False):
         args = self.args
         loader = self.valid_loader
@@ -356,18 +499,20 @@ class Runner:
         else:
             print("=> no checkpoint found at '{}'".format(best_file_name))
         
-        loss_list, eval_stats = self.validate(model, None, vis=True)
+        self.visualize(model)
         
-        if (eval_stats != None):
-            print("===> Average {}-loss on validation set is {:.8f}".format(self.crit_string, loss_list[0].avg))
-            print("===> Evaluation laneline F-measure: {:.8f}".format(eval_stats[0]))
-            print("===> Evaluation laneline Recall: {:.8f}".format(eval_stats[1]))
-            print("===> Evaluation laneline Precision: {:.8f}".format(eval_stats[2]))
-            print("===> Evaluation laneline Category Accuracy: {:.8f}".format(eval_stats[3]))
-            print("===> Evaluation laneline x error (close): {:.8f} m".format(eval_stats[4]))
-            print("===> Evaluation laneline x error (far): {:.8f} m".format(eval_stats[5]))
-            print("===> Evaluation laneline z error (close): {:.8f} m".format(eval_stats[6]))
-            print("===> Evaluation laneline z error (far): {:.8f} m".format(eval_stats[7]))
+        # loss_list, eval_stats = self.validate(model, None, vis=True)
+        
+        # if (eval_stats != None):
+        #     print("===> Average {}-loss on validation set is {:.8f}".format(self.crit_string, loss_list[0].avg))
+        #     print("===> Evaluation laneline F-measure: {:.8f}".format(eval_stats[0]))
+        #     print("===> Evaluation laneline Recall: {:.8f}".format(eval_stats[1]))
+        #     print("===> Evaluation laneline Precision: {:.8f}".format(eval_stats[2]))
+        #     print("===> Evaluation laneline Category Accuracy: {:.8f}".format(eval_stats[3]))
+        #     print("===> Evaluation laneline x error (close): {:.8f} m".format(eval_stats[4]))
+        #     print("===> Evaluation laneline x error (far): {:.8f} m".format(eval_stats[5]))
+        #     print("===> Evaluation laneline z error (close): {:.8f} m".format(eval_stats[6]))
+        #     print("===> Evaluation laneline z error (far): {:.8f} m".format(eval_stats[7]))
 
     def _get_train_dataset(self):
         args = self.args
